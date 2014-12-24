@@ -1495,6 +1495,9 @@ fi
 %kernel_variant_files %{with_kdump} kdump
 
 %changelog
+* Wed Dec 24 2014 Johnny Hughes <johnny@centos.org> - 3.10.0-123.13.2.el7.i686
+- added in i686 changes
+
 * Thu Dec 18 2014 CentOS Sources <bugs@centos.org> - 3.10.0-123.13.2.el7
 - Apply debranding changes
 
