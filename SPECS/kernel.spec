@@ -392,6 +392,9 @@ Patch1003: i386-audit-stop-scri-stack-frame.patch
 Patch1004: ignorewarnings.patch
 Patch1005: removejiffies.patch
 Patch1006: cpufreq.patch
+Patch1007: addmissing.patch
+Patch1008: undorhirqstat.patch
+Patch1009: otherfixes.patch
 
 BuildRoot: %{_tmppath}/kernel-%{KVRA}-root
 
@@ -707,6 +710,9 @@ ApplyOptionalPatch i386-audit-stop-scri-stack-frame.patch
 ApplyOptionalPatch ignorewarnings.patch
 ApplyOptionalPatch removejiffies.patch
 ApplyOptionalPatch cpufreq.patch
+ApplyOptionalPatch addmissing.patch
+ApplyOptionalPatch undorhirqstat.patch
+ApplyOptionalPatch otherfixes.patch
 
 # Any further pre-build tree manipulations happen here.
 

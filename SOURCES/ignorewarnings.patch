@@ -1,5 +1,6 @@
---- linux-3.10.0-327.el7.centos.x86_64/Makefile.orig	2015-10-29 15:56:51.000000000 -0500
-+++ linux-3.10.0-327.el7.centos.x86_64/Makefile	2015-11-21 09:49:08.038404090 -0600
+diff -up linux-3.10.0-327.el7.i686/Makefile.orig linux-3.10.0-327.el7.i686/Makefile
+--- linux-3.10.0-327.el7.i686/Makefile.orig	2015-11-21 22:47:53.504052764 -0500
++++ linux-3.10.0-327.el7.i686/Makefile	2015-11-21 22:51:28.459056797 -0500
 @@ -383,7 +383,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstric
  
  ifneq ($(WITH_GCOV),1)
