@@ -148,6 +148,9 @@ Summary: The Linux kernel
 %ifarch i686
 %define asmarch x86
 %define hdrarch i386
+%define all_arch_configs kernel-%{version}-i?86*.config
+%define image_install_path boot
+%define kernel_image arch/x86/boot/bzImage
 %endif
 
 %ifarch x86_64
@@ -203,7 +206,7 @@ Summary: The Linux kernel
 # Which is a BadThing(tm).
 
 # We only build kernel-headers on the following...
-%define nobuildarches i686 s390 ppc
+%define nobuildarches s390 ppc
 
 %ifarch %nobuildarches
 %define with_default 0
@@ -215,7 +218,7 @@ Summary: The Linux kernel
 %endif
 
 # Architectures we build tools/cpupower on
-%define cpupowerarchs x86_64 ppc64 ppc64le
+%define cpupowerarchs i686 x86_64 ppc64 ppc64le
 
 #
 # Three sets of minimum package version requirements in the form of Conflicts:
@@ -370,6 +373,8 @@ Source63: kernel-%{version}-ppc64le-debug.config
 Source70: kernel-%{version}-s390x.config
 Source71: kernel-%{version}-s390x-debug.config
 Source72: kernel-%{version}-s390x-kdump.config
+Source80: kernel-%{version}-i686.config
+Source81: kernel-%{version}-i686-debug.config
 
 # Sources for kernel-tools
 Source2000: cpupower.service
@@ -380,6 +385,13 @@ Patch999999: linux-kernel-test.patch
 Patch1000: debrand-single-cpu.patch
 Patch1001: debrand-rh_taint.patch
 Patch1002: debrand-rh-i686-cpu.patch
+Patch1003: i386-audit-stop-scri-stack-frame.patch
+Patch1004: ignorewarnings.patch
+Patch1005: removejiffies.patch
+Patch1006: cpufreq.patch
+Patch1007: addmissing.patch
+Patch1008: undorhirqstat.patch
+Patch1009: otherfixes.patch
 
 BuildRoot: %{_tmppath}/kernel-%{KVRA}-root
 
@@ -691,6 +703,13 @@ ApplyOptionalPatch linux-kernel-test.patch
 ApplyOptionalPatch debrand-single-cpu.patch
 ApplyOptionalPatch debrand-rh_taint.patch
 ApplyOptionalPatch debrand-rh-i686-cpu.patch
+ApplyOptionalPatch i386-audit-stop-scri-stack-frame.patch
+ApplyOptionalPatch ignorewarnings.patch
+ApplyOptionalPatch removejiffies.patch
+ApplyOptionalPatch cpufreq.patch
+ApplyOptionalPatch addmissing.patch
+ApplyOptionalPatch undorhirqstat.patch
+ApplyOptionalPatch otherfixes.patch
 
 # Any further pre-build tree manipulations happen here.
 
@@ -1071,7 +1090,7 @@ make %{?cross_opts} %{?_smp_mflags} -C tools/power/cpupower CPUFREQ_BENCH=false
     make %{?_smp_mflags} centrino-decode powernow-k8-decode
     popd
 %endif
-%ifarch x86_64
+%ifarch x86_64 i686
    pushd tools/power/x86/x86_energy_perf_policy/
    make
    popd
