@@ -1,0 +1,381 @@
+From ee2efd8e1b4cae38cb8264ce1b8e110d937e8061 Mon Sep 17 00:00:00 2001
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Date: Thu, 13 Mar 2014 14:16:40 -0400
+Subject: [PATCH] [SCSI] qla2xxx: Fix build errors related to invalid print
+ fields on some architectures.
+
+Fixes some build warnings such as:
+drivers/scsi/qla2xxx/qla_attr.c:162:6: warning: format '%lx' expects argument of
+type 'long unsigned int', but argument 6 has type 'size_t'"
+and
+drivers/scsi/qla2xxx/qla_init.c:5198:7: warning: format '%lx' expects argument
+of type 'long unsigned int', but argument 5 has type 'uint32_t' [-Wformat]
+
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c |  6 +++---
+ drivers/scsi/qla2xxx/qla_init.c | 12 ++++++------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index deca736..ecadd80 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -159,7 +159,7 @@ qla2x00_sysfs_read_fw_dump_template(struct file *filp, struct kobject *kobj,
+ 		return 0;
+ 
+ 	ql_dbg(ql_dbg_user, vha, 0x70e2,
+-	    "chunk <- off=%llx count=%lx\n", off, count);
++	    "chunk <- off=%llx count=%zx\n", off, count);
+ 	return memory_read_from_buffer(buf, count, &off,
+ 	    ha->fw_dump_template, ha->fw_dump_template_len);
+ }
+@@ -200,11 +200,11 @@ qla2x00_sysfs_write_fw_dump_template(struct file *filp, struct kobject *kobj,
+ 	if (off + count > ha->fw_dump_template_len) {
+ 		count = ha->fw_dump_template_len - off;
+ 		ql_dbg(ql_dbg_user, vha, 0x70d3,
+-		    "chunk -> truncating to %lx bytes.\n", count);
++		    "chunk -> truncating to %zx bytes.\n", count);
+ 	}
+ 
+ 	ql_dbg(ql_dbg_user, vha, 0x70d4,
+-	    "chunk -> off=%llx count=%lx\n", off, count);
++	    "chunk -> off=%llx count=%zx\n", off, count);
+ 	memcpy(ha->fw_dump_template + off, buf, count);
+ 
+ 	if (off + count == ha->fw_dump_template_len) {
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 8e36bb5..e6cc187 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5343,8 +5343,8 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+ 	    "-> template size %x bytes\n", dlen);
+ 	if (dlen > risc_size * sizeof(*dcode)) {
+ 		ql_log(ql_log_warn, vha, 0x0167,
+-		    "Failed fwdump template exceeds array by %lx bytes\n",
+-		    dlen - risc_size * sizeof(*dcode));
++		    "Failed fwdump template exceeds array by %x bytes\n",
++		    (uint32_t)(dlen - risc_size * sizeof(*dcode)));
+ 		goto default_template;
+ 	}
+ 	ha->fw_dump_template_len = dlen;
+@@ -5610,8 +5610,8 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 	ha->fw_dump_template_len = 0;
+ 
+ 	ql_dbg(ql_dbg_init, vha, 0x171,
+-	    "Loading fwdump template from %lx\n",
+-	    (void *)fwcode - (void *)blob->fw->data);
++	    "Loading fwdump template from %x\n",
++	    (uint32_t)((void *)fwcode - (void *)blob->fw->data));
+ 	risc_size = be32_to_cpu(fwcode[2]);
+ 	ql_dbg(ql_dbg_init, vha, 0x172,
+ 	    "-> array size %x dwords\n", risc_size);
+@@ -5645,8 +5645,8 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 	    "-> template size %x bytes\n", dlen);
+ 	if (dlen > risc_size * sizeof(*fwcode)) {
+ 		ql_log(ql_log_warn, vha, 0x0177,
+-		    "Failed fwdump template exceeds array by %lx bytes\n",
+-		    dlen - risc_size * sizeof(*fwcode));
++		    "Failed fwdump template exceeds array by %x bytes\n",
++		    (uint32_t)(dlen - risc_size * sizeof(*fwcode)));
+ 		goto default_template;
+ 	}
+ 	ha->fw_dump_template_len = dlen;
+-- 
+1.8.3.1
+
+From 7a21a71e1c702b523676267fa09048f21918636f Mon Sep 17 00:00:00 2001
+From: Paul Bolle <pebolle@tiscali.nl>
+Date: Mon, 30 Jun 2014 16:32:29 +0200
+Subject: [PATCH] x86: Remove unused variable "polling"
+
+Compile tested. "polling" is unused since commit f80c5b39b80a
+("sched/idle, x86: Switch from TS_POLLING to TIF_POLLING_NRFLAG").
+
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Peter Zijlstra <peterz@infradead.org>
+Cc: Jiri Kosina <jkosina@suse.cz>
+Link: http://lkml.kernel.org/r/1404138749.2978.6.camel@x41
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/kernel/apm_32.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/x86/kernel/apm_32.c b/arch/x86/kernel/apm_32.c
+index 8fdcec6..66d3b1f 100644
+--- a/arch/x86/kernel/apm_32.c
++++ b/arch/x86/kernel/apm_32.c
+@@ -841,7 +841,6 @@ static int apm_do_idle(void)
+ 	u32 eax;
+ 	u8 ret = 0;
+ 	int idled = 0;
+-	int polling;
+ 	int err = 0;
+ 
+ 	if (!need_resched()) {
+-- 
+1.8.3.1
+
+From f9cfccee5ef4d923e21394c852b7f75d9c5c4a61 Mon Sep 17 00:00:00 2001
+From: John Stultz <john.stultz@linaro.org>
+Date: Wed, 16 Jul 2014 21:03:56 +0000
+Subject: [PATCH] ktime: Change ktime_set() to take 64bit seconds value
+
+In order to support dates past 2038 on 32bit systems, ktime_set()
+needs to handle 64bit second values.
+
+[ tglx: Removed the BITS_PER_LONG check ]
+
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+---
+ include/linux/ktime.h | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/ktime.h b/include/linux/ktime.h
+index 320f5da..5fa1494 100644
+--- a/include/linux/ktime.h
++++ b/include/linux/ktime.h
+@@ -71,13 +71,12 @@ typedef union ktime ktime_t;		/* Kill this */
+  *
+  * Return the ktime_t representation of the value
+  */
+-static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
++static inline ktime_t ktime_set(const s64 secs, const unsigned long nsecs)
+ {
+-#if (BITS_PER_LONG == 64)
+ 	if (unlikely(secs >= KTIME_SEC_MAX))
+ 		return (ktime_t){ .tv64 = KTIME_MAX };
+-#endif
+-	return (ktime_t) { .tv64 = (s64)secs * NSEC_PER_SEC + (s64)nsecs };
++
++	return (ktime_t) { .tv64 = secs * NSEC_PER_SEC + (s64)nsecs };
+ }
+ 
+ /* Subtract two ktime_t variables. rem = lhs -rhs: */
+-- 
+1.8.3.1
+
+From af80f3a91846c33852e97c18fd986d0db774d7f1 Mon Sep 17 00:00:00 2001
+From: Richard Cochran <richardcochran@gmail.com>
+Date: Sun, 29 Mar 2015 23:11:56 +0200
+Subject: [PATCH] ptp: bnx2x: convert to the 64 bit get/set time methods.
+
+This driver's clock is implemented using a timecounter, and so with
+this patch the driver is ready for the year 2038.
+
+Compile tested only.
+
+Signed-off-by: Richard Cochran <richardcochran@gmail.com>
+Acked-by: Sony Chacko <sony.chacko@qlogic.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+index dc20474..fb0ebc9 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+@@ -13366,8 +13366,8 @@ static void bnx2x_register_phc(struct bnx2x *bp)
+ 	bp->ptp_clock_info.pps = 0;
+ 	bp->ptp_clock_info.adjfreq = bnx2x_ptp_adjfreq;
+ 	bp->ptp_clock_info.adjtime = bnx2x_ptp_adjtime;
+-	bp->ptp_clock_info.gettime = bnx2x_ptp_gettime;
+-	bp->ptp_clock_info.settime = bnx2x_ptp_settime;
++	bp->ptp_clock_info.gettime64 = bnx2x_ptp_gettime;
++	bp->ptp_clock_info.settime64 = bnx2x_ptp_settime;
+ 	bp->ptp_clock_info.enable = bnx2x_ptp_enable;
+ 
+ 	bp->ptp_clock = ptp_clock_register(&bp->ptp_clock_info, &bp->pdev->dev);
+-- 
+1.8.3.1
+
+From 23e58ec4890fa12e6965fb79e4924a151c6072fd Mon Sep 17 00:00:00 2001
+From: Richard Cochran <richardcochran@gmail.com>
+Date: Sun, 29 Mar 2015 23:12:04 +0200
+Subject: [PATCH] ptp: ixgbe: convert to the 64 bit get/set time methods.
+
+This driver's clock is implemented using a timecounter, and so with
+this patch the driver is ready for the year 2038.
+
+Compile tested only.
+
+Signed-off-by: Richard Cochran <richardcochran@gmail.com>
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c
+index e70158c..e5ba040 100644
+--- a/drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c
++++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c
+@@ -871,8 +871,8 @@ static int ixgbe_ptp_create_clock(struct ixgbe_adapter *adapter)
+ 		adapter->ptp_caps.pps = 1;
+ 		adapter->ptp_caps.adjfreq = ixgbe_ptp_adjfreq;
+ 		adapter->ptp_caps.adjtime = ixgbe_ptp_adjtime;
+-		adapter->ptp_caps.gettime = ixgbe_ptp_gettime;
+-		adapter->ptp_caps.settime = ixgbe_ptp_settime;
++		adapter->ptp_caps.gettime64 = ixgbe_ptp_gettime;
++		adapter->ptp_caps.settime64 = ixgbe_ptp_settime;
+ 		adapter->ptp_caps.enable = ixgbe_ptp_feature_enable;
+ 		break;
+ 	case ixgbe_mac_82599EB:
+@@ -887,8 +887,8 @@ static int ixgbe_ptp_create_clock(struct ixgbe_adapter *adapter)
+ 		adapter->ptp_caps.pps = 0;
+ 		adapter->ptp_caps.adjfreq = ixgbe_ptp_adjfreq;
+ 		adapter->ptp_caps.adjtime = ixgbe_ptp_adjtime;
+-		adapter->ptp_caps.gettime = ixgbe_ptp_gettime;
+-		adapter->ptp_caps.settime = ixgbe_ptp_settime;
++		adapter->ptp_caps.gettime64 = ixgbe_ptp_gettime;
++		adapter->ptp_caps.settime64 = ixgbe_ptp_settime;
+ 		adapter->ptp_caps.enable = ixgbe_ptp_feature_enable;
+ 		break;
+ 	default:
+-- 
+1.8.3.1
+
+From 51c2e67006049959ad5f983caf0e00ccef973b55 Mon Sep 17 00:00:00 2001
+From: Florian Westphal <fw@strlen.de>
+Date: Wed, 17 Jun 2015 23:58:28 +0200
+Subject: [PATCH] netfilter: xtables: fix warnings on 32bit platforms
+
+On 32bit archs gcc complains due to cast from void* to u64.
+Add intermediate casts to long to silence these warnings.
+
+include/linux/netfilter/x_tables.h:376:10: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+include/linux/netfilter/x_tables.h:384:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+include/linux/netfilter/x_tables.h:391:23: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+include/linux/netfilter/x_tables.h:400:22: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+Fixes: 71ae0dff02d756e ("netfilter: xtables: use percpu rule counters")
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+---
+ include/linux/netfilter/x_tables.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/netfilter/x_tables.h b/include/linux/netfilter/x_tables.h
+index 88a9b35..1b6a065 100644
+--- a/include/linux/netfilter/x_tables.h
++++ b/include/linux/netfilter/x_tables.h
+@@ -377,7 +377,7 @@ static inline u64 xt_percpu_counter_alloc(void)
+ 		if (res == NULL)
+ 			return (u64) -ENOMEM;
+ 
+-		return (__force u64) res;
++		return (u64) (__force unsigned long) res;
+ 	}
+ 
+ 	return 0;
+@@ -385,14 +385,14 @@ static inline u64 xt_percpu_counter_alloc(void)
+ static inline void xt_percpu_counter_free(u64 pcnt)
+ {
+ 	if (nr_cpu_ids > 1)
+-		free_percpu((void __percpu *) pcnt);
++		free_percpu((void __percpu *) (unsigned long) pcnt);
+ }
+ 
+ static inline struct xt_counters *
+ xt_get_this_cpu_counter(struct xt_counters *cnt)
+ {
+ 	if (nr_cpu_ids > 1)
+-		return this_cpu_ptr((void __percpu *) cnt->pcnt);
++		return this_cpu_ptr((void __percpu *) (unsigned long) cnt->pcnt);
+ 
+ 	return cnt;
+ }
+@@ -401,7 +401,7 @@ static inline struct xt_counters *
+ xt_get_per_cpu_counter(struct xt_counters *cnt, unsigned int cpu)
+ {
+ 	if (nr_cpu_ids > 1)
+-		return per_cpu_ptr((void __percpu *) cnt->pcnt, cpu);
++		return per_cpu_ptr((void __percpu *) (unsigned long) cnt->pcnt, cpu);
+ 
+ 	return cnt;
+ }
+-- 
+1.8.3.1
+
+From 1c0e600bbb7566eba7f3e29d3797de32d211330e Mon Sep 17 00:00:00 2001
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 7 Oct 2015 14:10:04 +0200
+Subject: [PATCH] RDMA/cxgb4: re-fix 32-bit build warning
+
+Casting a pointer to __be64 produces a warning on 32-bit architectures:
+
+drivers/infiniband/hw/cxgb4/mem.c:147:20: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+    req->wr.wr_lo = (__force __be64)&wr_wait;
+
+This was fixed at least twice for this driver in different places,
+and accidentally reverted once more. This puts the correct version
+back in place.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 6198dd8d7a6a7 ("iw_cxgb4: 32b platform fixes")
+Signed-off-by: Doug Ledford <dledford@redhat.com>
+---
+ drivers/infiniband/hw/cxgb4/mem.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/infiniband/hw/cxgb4/mem.c b/drivers/infiniband/hw/cxgb4/mem.c
+index 30f0720..65b2474 100644
+--- a/drivers/infiniband/hw/cxgb4/mem.c
++++ b/drivers/infiniband/hw/cxgb4/mem.c
+@@ -137,7 +137,7 @@ static int _c4iw_write_mem_inline(struct c4iw_rdev *rdev, u32 addr, u32 len,
+ 		if (i == (num_wqe-1)) {
+ 			req->wr.wr_hi = cpu_to_be32(FW_WR_OP_V(FW_ULPTX_WR) |
+ 						    FW_WR_COMPL_F);
+-			req->wr.wr_lo = (__force __be64)&wr_wait;
++			req->wr.wr_lo = (__force __be64)(unsigned long)&wr_wait;
+ 		} else
+ 			req->wr.wr_hi = cpu_to_be32(FW_WR_OP_V(FW_ULPTX_WR));
+ 		req->wr.wr_mid = cpu_to_be32(
+-- 
+1.8.3.1
+
+From 11eee7bee939b945f9daca56c2347c1d8d680a95 Mon Sep 17 00:00:00 2001
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 7 Oct 2015 14:29:51 +0200
+Subject: [PATCH] IB/core: avoid 32-bit warning
+
+The INIT_UDATA() macro requires a pointer or unsigned long argument for
+both input and output buffer, and all callers had a cast from when
+the code was merged until a recent restructuring, so now we get
+
+core/uverbs_cmd.c: In function 'ib_uverbs_create_cq':
+core/uverbs_cmd.c:1481:66: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+This makes the code behave as before by adding back the cast to
+unsigned long.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 565197dd8fb1 ("IB/core: Extend ib_uverbs_create_cq")
+Reviewed-by: Yann Droneaud <ydroneaud@opteya.com>
+Signed-off-by: Doug Ledford <dledford@redhat.com>
+---
+ drivers/infiniband/core/uverbs_cmd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/infiniband/core/uverbs_cmd.c b/drivers/infiniband/core/uverbs_cmd.c
+index bbb02ff..30f3011 100644
+--- a/drivers/infiniband/core/uverbs_cmd.c
++++ b/drivers/infiniband/core/uverbs_cmd.c
+@@ -1463,7 +1463,7 @@ ssize_t ib_uverbs_create_cq(struct ib_uverbs_file *file,
+ 	if (copy_from_user(&cmd, buf, sizeof(cmd)))
+ 		return -EFAULT;
+ 
+-	INIT_UDATA(&ucore, buf, cmd.response, sizeof(cmd), sizeof(resp));
++	INIT_UDATA(&ucore, buf, (unsigned long)cmd.response, sizeof(cmd), sizeof(resp));
+ 
+ 	INIT_UDATA(&uhw, buf + sizeof(cmd),
+ 		   (unsigned long)cmd.response + sizeof(resp),
+-- 
+1.8.3.1
+

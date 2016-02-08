@@ -391,6 +391,7 @@ Patch1006: cpufreq.patch
 Patch1007: addmissing.patch
 Patch1008: undorhirqstat.patch
 Patch1009: otherfixes.patch
+Patch1010: upstream-32bit-fixes.patch
 
 BuildRoot: %{_tmppath}/kernel-%{KVRA}-root
 
@@ -708,6 +709,7 @@ ApplyOptionalPatch cpufreq.patch
 ApplyOptionalPatch addmissing.patch
 ApplyOptionalPatch undorhirqstat.patch
 ApplyOptionalPatch otherfixes.patch
+ApplyOptionalPatch upstream-32bit-fixes.patch
 
 # Any further pre-build tree manipulations happen here.
 
