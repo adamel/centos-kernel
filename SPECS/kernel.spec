@@ -386,7 +386,6 @@ Patch1000: debrand-single-cpu.patch
 Patch1001: debrand-rh_taint.patch
 Patch1002: debrand-rh-i686-cpu.patch
 Patch1003: i386-audit-stop-scri-stack-frame.patch
-Patch1004: ignorewarnings.patch
 Patch1005: removejiffies.patch
 Patch1006: cpufreq.patch
 Patch1007: addmissing.patch
@@ -704,7 +703,6 @@ ApplyOptionalPatch debrand-single-cpu.patch
 ApplyOptionalPatch debrand-rh_taint.patch
 ApplyOptionalPatch debrand-rh-i686-cpu.patch
 ApplyOptionalPatch i386-audit-stop-scri-stack-frame.patch
-ApplyOptionalPatch ignorewarnings.patch
 ApplyOptionalPatch removejiffies.patch
 ApplyOptionalPatch cpufreq.patch
 ApplyOptionalPatch addmissing.patch
