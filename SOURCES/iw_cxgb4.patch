@@ -1,0 +1,27 @@
+From f11d529aa8ebd81218d8a0a2a8c04c4f41f3718f Mon Sep 17 00:00:00 2001
+From: Marcus Sundberg <marcus.sundberg@aptilo.com>
+Date: Mon, 8 Feb 2016 18:34:39 +0100
+Subject: [PATCH] iw_cxgb4: 32b platform fix
+
+Casting pci_resource_start() return value directly to void * causes
+a warning.
+---
+ drivers/infiniband/hw/cxgb4/device.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/infiniband/hw/cxgb4/device.c b/drivers/infiniband/hw/cxgb4/device.c
+index 11d55c9..94c2391 100644
+--- a/drivers/infiniband/hw/cxgb4/device.c
++++ b/drivers/infiniband/hw/cxgb4/device.c
+@@ -830,7 +830,7 @@ static int c4iw_rdev_open(struct c4iw_rdev *rdev)
+ 	PDBG("udb len 0x%x udb base %p db_reg %p gts_reg %p qpshift %lu "
+ 	     "qpmask 0x%x cqshift %lu cqmask 0x%x\n",
+ 	     (unsigned)pci_resource_len(rdev->lldi.pdev, 2),
+-	     (void *)pci_resource_start(rdev->lldi.pdev, 2),
++	     (void *)(unsigned long)pci_resource_start(rdev->lldi.pdev, 2),
+ 	     rdev->lldi.db_reg,
+ 	     rdev->lldi.gts_reg,
+ 	     rdev->qpshift, rdev->qpmask,
+-- 
+1.8.3.1
+

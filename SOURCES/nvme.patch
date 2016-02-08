@@ -1,0 +1,39 @@
+From 39f3f2d7be077d4a067d95ea2b3f02e51f7a05f3 Mon Sep 17 00:00:00 2001
+From: Marcus Sundberg <marcus.sundberg@aptilo.com>
+Date: Mon, 8 Feb 2016 18:18:10 +0100
+Subject: [PATCH] nvme: fix pointer cast warnings on 32 bit
+
+---
+ drivers/block/nvme-core.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
+index 711d96a..eafb721 100644
+--- a/drivers/block/nvme-core.c
++++ b/drivers/block/nvme-core.c
+@@ -1693,8 +1693,9 @@ static int nvme_submit_io(struct nvme_ns *ns, struct nvme_user_io __user *uio)
+ 			goto unmap;
+ 		}
+ 		if (write) {
+-			if (copy_from_user(meta, (void __user *)io.metadata,
+-					   meta_len)) {
++			if (copy_from_user(meta,
++					(void __user *)(uintptr_t)io.metadata,
++					meta_len)) {
+ 				status = -EFAULT;
+ 				goto unmap;
+ 			}
+@@ -1722,8 +1723,8 @@ static int nvme_submit_io(struct nvme_ns *ns, struct nvme_user_io __user *uio)
+ 
+ 	if (meta) {
+ 		if (status == NVME_SC_SUCCESS && !write) {
+-			if (copy_to_user((void __user *)io.metadata, meta,
+-					 meta_len))
++			if (copy_to_user((void __user *)(uintptr_t)io.metadata,
++					 meta, meta_len))
+ 				status = -EFAULT;
+ 		}
+ 		dma_free_coherent(&dev->pci_dev->dev, meta_len, meta, meta_dma);
+-- 
+1.8.3.1
+

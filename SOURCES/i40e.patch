@@ -1,0 +1,43 @@
+From 15ba2cfbba429fae30b2556cd7d97b5e92d4e656 Mon Sep 17 00:00:00 2001
+From: Marcus Sundberg <marcus.sundberg@aptilo.com>
+Date: Mon, 8 Feb 2016 15:16:03 +0100
+Subject: [PATCH] i40e: Do not cast directly from pointer to u64.
+
+Causes warnings on 32 bit systems.
+---
+ drivers/net/ethernet/intel/i40evf/i40e_common.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/i40evf/i40e_common.c b/drivers/net/ethernet/intel/i40evf/i40e_common.c
+index 1950db1..376aab2 100644
+--- a/drivers/net/ethernet/intel/i40evf/i40e_common.c
++++ b/drivers/net/ethernet/intel/i40evf/i40e_common.c
+@@ -442,8 +442,10 @@ static i40e_status i40e_aq_get_set_rss_lut(struct i40e_hw *hw,
+ 					I40E_AQC_SET_RSS_LUT_TABLE_TYPE_SHIFT) &
+ 					I40E_AQC_SET_RSS_LUT_TABLE_TYPE_MASK));
+ 
+-	cmd_resp->addr_high = cpu_to_le32(high_16_bits((u64)lut));
+-	cmd_resp->addr_low = cpu_to_le32(lower_32_bits((u64)lut));
++	cmd_resp->addr_high = cpu_to_le32(
++		high_16_bits((u64)(unsigned long)lut));
++	cmd_resp->addr_low = cpu_to_le32(
++		lower_32_bits((u64)(unsigned long)lut));
+ 
+ 	status = i40evf_asq_send_command(hw, &desc, lut, lut_size, NULL);
+ 
+@@ -519,8 +521,10 @@ static i40e_status i40e_aq_get_set_rss_key(struct i40e_hw *hw,
+ 					  I40E_AQC_SET_RSS_KEY_VSI_ID_SHIFT) &
+ 					  I40E_AQC_SET_RSS_KEY_VSI_ID_MASK));
+ 	cmd_resp->vsi_id |= cpu_to_le16((u16)I40E_AQC_SET_RSS_KEY_VSI_VALID);
+-	cmd_resp->addr_high = cpu_to_le32(high_16_bits((u64)key));
+-	cmd_resp->addr_low = cpu_to_le32(lower_32_bits((u64)key));
++	cmd_resp->addr_high = cpu_to_le32(
++		high_16_bits((u64)(unsigned long)key));
++	cmd_resp->addr_low = cpu_to_le32(
++		lower_32_bits((u64)(unsigned long)key));
+ 
+ 	status = i40evf_asq_send_command(hw, &desc, key, key_size, NULL);
+ 
+-- 
+1.8.3.1
+

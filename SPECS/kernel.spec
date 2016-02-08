@@ -392,6 +392,10 @@ Patch1007: addmissing.patch
 Patch1008: undorhirqstat.patch
 Patch1009: otherfixes.patch
 Patch1010: upstream-32bit-fixes.patch
+Patch1011: i40e.patch
+Patch1012: queue_store_unpriv_sgio.patch
+Patch1013: nvme.patch
+Patch1014: iw_cxgb4.patch
 
 BuildRoot: %{_tmppath}/kernel-%{KVRA}-root
 
@@ -710,6 +714,10 @@ ApplyOptionalPatch addmissing.patch
 ApplyOptionalPatch undorhirqstat.patch
 ApplyOptionalPatch otherfixes.patch
 ApplyOptionalPatch upstream-32bit-fixes.patch
+ApplyOptionalPatch i40e.patch
+ApplyOptionalPatch queue_store_unpriv_sgio.patch
+ApplyOptionalPatch nvme.patch
+ApplyOptionalPatch iw_cxgb4.patch
 
 # Any further pre-build tree manipulations happen here.
 

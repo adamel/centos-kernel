@@ -1,0 +1,25 @@
+From d719f2b11f08861d97992f5973b7465fdb150a42 Mon Sep 17 00:00:00 2001
+From: Marcus Sundberg <marcus.sundberg@aptilo.com>
+Date: Mon, 8 Feb 2016 14:46:16 +0100
+Subject: [PATCH] (queue_store_unpriv_sgio): Check return from queue_var_store
+
+---
+ block/blk-sysfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 13c5338..1f168c0 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -207,6 +207,8 @@ queue_store_unpriv_sgio(struct request_queue *q, const char *page, size_t count)
+ 		return -EPERM;
+ 
+ 	ret = queue_var_store(&val, page, count);
++	if (ret < 0)
++		return ret;
+ 	spin_lock_irq(q->queue_lock);
+ 	if (val)
+ 		queue_flag_set(QUEUE_FLAG_UNPRIV_SGIO, q);
+-- 
+1.8.3.1
+
