@@ -386,13 +386,14 @@ Patch1000: debrand-single-cpu.patch
 Patch1001: debrand-rh_taint.patch
 Patch1002: debrand-rh-i686-cpu.patch
 Patch1003: i386-audit-stop-scri-stack-frame.patch
-Patch1004: ignorewarnings.patch
+#Patch1004: ignorewarnings.patch
 Patch1005: removejiffies.patch
 Patch1006: cpufreq.patch
 Patch1007: addmissing.patch
 Patch1008: undorhirqstat.patch
 Patch1009: otherfixes.patch
-
+Patch1010: upstream-32bit-fixes.patch
+Patch1011: clear-32bit-Werror-warnings.patch
 BuildRoot: %{_tmppath}/kernel-%{KVRA}-root
 
 %description
@@ -704,13 +705,14 @@ ApplyOptionalPatch debrand-single-cpu.patch
 ApplyOptionalPatch debrand-rh_taint.patch
 ApplyOptionalPatch debrand-rh-i686-cpu.patch
 ApplyOptionalPatch i386-audit-stop-scri-stack-frame.patch
-ApplyOptionalPatch ignorewarnings.patch
+#ApplyOptionalPatch ignorewarnings.patch
 ApplyOptionalPatch removejiffies.patch
 ApplyOptionalPatch cpufreq.patch
 ApplyOptionalPatch addmissing.patch
 ApplyOptionalPatch undorhirqstat.patch
 ApplyOptionalPatch otherfixes.patch
-
+ApplyOptionalPatch upstream-32bit-fixes.patch
+ApplyOptionalPatch clear-32bit-Werror-warnings.patch
 # Any further pre-build tree manipulations happen here.
 
 chmod +x scripts/checkpatch.pl
