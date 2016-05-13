@@ -1,0 +1,51 @@
+diff -up linux-3.10.0-327.sdl7.x86_64/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c.otherfixes linux-3.10.0-327.sdl7.x86_64/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c
+--- linux-3.10.0-327.sdl7.x86_64/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c.otherfixes	2015-10-29 16:56:51.000000000 -0400
++++ linux-3.10.0-327.sdl7.x86_64/drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c	2015-11-22 00:24:06.753025997 -0500
+@@ -13314,7 +13314,7 @@ static int bnx2x_ptp_adjtime(struct ptp_
+ 	return 0;
+ }
+ 
+-static int bnx2x_ptp_gettime(struct ptp_clock_info *ptp, struct timespec *ts)
++static int bnx2x_ptp_gettime(struct ptp_clock_info *ptp, struct timespec64 *ts)
+ {
+ 	struct bnx2x *bp = container_of(ptp, struct bnx2x, ptp_clock_info);
+ 	u64 ns;
+@@ -13329,7 +13329,7 @@ static int bnx2x_ptp_gettime(struct ptp_
+ }
+ 
+ static int bnx2x_ptp_settime(struct ptp_clock_info *ptp,
+-			     const struct timespec *ts)
++			     const struct timespec64 *ts)
+ {
+ 	struct bnx2x *bp = container_of(ptp, struct bnx2x, ptp_clock_info);
+ 	u64 ns;
+diff -up linux-3.10.0-327.sdl7.x86_64/drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c.otherfixes linux-3.10.0-327.sdl7.x86_64/drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c
+--- linux-3.10.0-327.sdl7.x86_64/drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c.otherfixes	2015-10-29 16:56:51.000000000 -0400
++++ linux-3.10.0-327.sdl7.x86_64/drivers/net/ethernet/intel/ixgbe/ixgbe_ptp.c	2015-11-22 00:35:15.639038546 -0500
+@@ -279,7 +279,7 @@ static int ixgbe_ptp_adjtime(struct ptp_
+  * read the timecounter and return the correct value on ns,
+  * after converting it into a struct timespec.
+  */
+-static int ixgbe_ptp_gettime(struct ptp_clock_info *ptp, struct timespec *ts)
++static int ixgbe_ptp_gettime(struct ptp_clock_info *ptp, struct timespec64 *ts)
+ {
+ 	struct ixgbe_adapter *adapter =
+ 		container_of(ptp, struct ixgbe_adapter, ptp_caps);
+@@ -304,7 +304,7 @@ static int ixgbe_ptp_gettime(struct ptp_
+  * wall timer value.
+  */
+ static int ixgbe_ptp_settime(struct ptp_clock_info *ptp,
+-			     const struct timespec *ts)
++			     const struct timespec64 *ts)
+ {
+ 	struct ixgbe_adapter *adapter =
+ 		container_of(ptp, struct ixgbe_adapter, ptp_caps);
+@@ -404,7 +404,7 @@ void ixgbe_ptp_overflow_check(struct ixg
+ {
+ 	bool timeout = time_is_before_jiffies(adapter->last_overflow_check +
+ 					     IXGBE_OVERFLOW_PERIOD);
+-	struct timespec ts;
++	struct timespec64 ts;
+ 
+ 	if (timeout) {
+ 		ixgbe_ptp_gettime(&adapter->ptp_caps, &ts);
