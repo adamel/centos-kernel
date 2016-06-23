@@ -1,0 +1,84 @@
+diff -up linux-3.10.0-327.sdl7.x86_64/arch/x86/include/asm/hardirq.h.undorhirqstat linux-3.10.0-327.sdl7.x86_64/arch/x86/include/asm/hardirq.h
+--- linux-3.10.0-327.sdl7.x86_64/arch/x86/include/asm/hardirq.h.undorhirqstat	2015-10-29 16:56:51.000000000 -0400
++++ linux-3.10.0-327.sdl7.x86_64/arch/x86/include/asm/hardirq.h	2015-11-21 23:57:10.330063191 -0500
+@@ -37,18 +37,13 @@ typedef struct {
+ 
+ DECLARE_PER_CPU_SHARED_ALIGNED(irq_cpustat_t, irq_stat);
+ 
+-typedef struct {
+-	unsigned int irq_hv_callback_count;
+-} ____cacheline_aligned rh_irq_cpustat_t;
+-
+-DECLARE_PER_CPU_SHARED_ALIGNED(rh_irq_cpustat_t, rh_irq_stat);
++/* We can have at most NR_VECTORS irqs routed to a cpu at a time */
++#define MAX_HARDIRQS_PER_CPU NR_VECTORS
+ 
+ #define __ARCH_IRQ_STAT
+ 
+ #define inc_irq_stat(member)	this_cpu_inc(irq_stat.member)
+ 
+-#define rh_inc_irq_stat(member)	this_cpu_inc(rh_irq_stat.member)
+-
+ #define local_softirq_pending()	this_cpu_read(irq_stat.__softirq_pending)
+ 
+ #define __ARCH_SET_SOFTIRQ_PENDING
+diff -up linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/cpu/mshyperv.c.undorhirqstat linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/cpu/mshyperv.c
+--- linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/cpu/mshyperv.c.undorhirqstat	2015-10-29 16:56:51.000000000 -0400
++++ linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/cpu/mshyperv.c	2015-11-22 00:03:55.131003266 -0500
+@@ -46,7 +46,6 @@ void hyperv_vector_handler(struct pt_reg
+ 	irq_enter();
+ 	exit_idle();
+ 
+-	rh_inc_irq_stat(irq_hv_callback_count);
+ 	if (vmbus_handler)
+ 		vmbus_handler();
+ 
+diff -up linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/irq.c.undorhirqstat linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/irq.c
+--- linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/irq.c.undorhirqstat	2015-10-29 16:56:51.000000000 -0400
++++ linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/irq.c	2015-11-21 23:58:02.526064171 -0500
+@@ -48,7 +48,6 @@ void ack_bad_irq(unsigned int irq)
+ }
+ 
+ #define irq_stats(x)		(&per_cpu(irq_stat, x))
+-#define rh_irq_stats(x)		(&per_cpu(rh_irq_stat, x))
+ /*
+  * /proc/interrupts printing for arch specific interrupts
+  */
+@@ -126,13 +125,6 @@ int arch_show_interrupts(struct seq_file
+ 		seq_printf(p, "%10u ", per_cpu(mce_poll_count, j));
+ 	seq_printf(p, "  Machine check polls\n");
+ #endif
+-	if (test_bit(HYPERVISOR_CALLBACK_VECTOR, used_vectors)) {
+-		seq_printf(p, "%*s: ", prec, "HYP");
+-		for_each_online_cpu(j)
+-			seq_printf(p, "%10u ",
+-				   rh_irq_stats(j)->irq_hv_callback_count);
+-		seq_printf(p, "  Hypervisor callback interrupts\n");
+-	}
+ 	seq_printf(p, "%*s: %10u\n", prec, "ERR", atomic_read(&irq_err_count));
+ #if defined(CONFIG_X86_IO_APIC)
+ 	seq_printf(p, "%*s: %10u\n", prec, "MIS", atomic_read(&irq_mis_count));
+diff -up linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/irq_64.c.undorhirqstat linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/irq_64.c
+--- linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/irq_64.c.undorhirqstat	2015-10-29 16:56:51.000000000 -0400
++++ linux-3.10.0-327.sdl7.x86_64/arch/x86/kernel/irq_64.c	2015-11-21 23:58:27.650064642 -0500
+@@ -23,8 +23,6 @@
+ DEFINE_PER_CPU_SHARED_ALIGNED(irq_cpustat_t, irq_stat);
+ EXPORT_PER_CPU_SYMBOL(irq_stat);
+ 
+-DEFINE_PER_CPU_SHARED_ALIGNED(rh_irq_cpustat_t, rh_irq_stat);
+-
+ DEFINE_PER_CPU(struct pt_regs *, irq_regs);
+ EXPORT_PER_CPU_SYMBOL(irq_regs);
+ 
+diff -up linux-3.10.0-327.sdl7.x86_64/drivers/xen/events.c.undorhirqstat linux-3.10.0-327.sdl7.x86_64/drivers/xen/events.c
+--- linux-3.10.0-327.sdl7.x86_64/drivers/xen/events.c.undorhirqstat	2015-10-29 16:56:51.000000000 -0400
++++ linux-3.10.0-327.sdl7.x86_64/drivers/xen/events.c	2015-11-22 00:04:18.032003696 -0500
+@@ -1446,8 +1446,6 @@ void xen_evtchn_do_upcall(struct pt_regs
+ #ifdef CONFIG_X86
+ 	exit_idle();
+ #endif
+-	rh_inc_irq_stat(irq_hv_callback_count);
+-
+ 	__xen_evtchn_do_upcall();
+ 
+ 	irq_exit();
