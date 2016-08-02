@@ -704,7 +704,14 @@ ApplyOptionalPatch linux-kernel-test.patch
 ApplyOptionalPatch debrand-single-cpu.patch
 ApplyOptionalPatch debrand-rh_taint.patch
 ApplyOptionalPatch debrand-rh-i686-cpu.patch
-
+ApplyOptionalPatch i386-audit-stop-scri-stack-frame.patch
+ApplyOptionalPatch removejiffies.patch
+ApplyOptionalPatch cpufreq.patch
+ApplyOptionalPatch addmissing.patch
+ApplyOptionalPatch undorhirqstat.patch
+ApplyOptionalPatch otherfixes.patch
+ApplyOptionalPatch upstream-32bit-fixes.patch
+ApplyOptionalPatch clear-32bit-Werror-warnings.patch
 # Any further pre-build tree manipulations happen here.
 
 chmod +x scripts/checkpatch.pl
