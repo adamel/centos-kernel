@@ -1,134 +1,27 @@
-From 15ba2cfbba429fae30b2556cd7d97b5e92d4e656 Mon Sep 17 00:00:00 2001
+From 87a5a3683110ec3d30d95036c57f5cfa330ca9d9 Mon Sep 17 00:00:00 2001
 From: Marcus Sundberg <marcus.sundberg@aptilo.com>
-Date: Mon, 8 Feb 2016 15:16:03 +0100
-Subject: [PATCH] i40e: Do not cast directly from pointer to u64.
+Date: Fri, 16 Dec 2016 22:53:51 +0100
+Subject: [PATCH] gpt: Use correct type for gpt->gdp.
 
-Causes warnings on 32 bit systems.
+It should be a pointer to gte_t, to avoid warnings when
+CONFIG_HIGHMEM64G is enabled.
 ---
- drivers/net/ethernet/intel/i40evf/i40e_common.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/ethernet/intel/i40evf/i40e_common.c b/drivers/net/ethernet/intel/i40evf/i40e_common.c
-index 1950db1..376aab2 100644
---- a/drivers/net/ethernet/intel/i40evf/i40e_common.c
-+++ b/drivers/net/ethernet/intel/i40evf/i40e_common.c
-@@ -442,8 +442,10 @@ static i40e_status i40e_aq_get_set_rss_lut(struct i40e_hw *hw,
- 					I40E_AQC_SET_RSS_LUT_TABLE_TYPE_SHIFT) &
- 					I40E_AQC_SET_RSS_LUT_TABLE_TYPE_MASK));
- 
--	cmd_resp->addr_high = cpu_to_le32(high_16_bits((u64)lut));
--	cmd_resp->addr_low = cpu_to_le32(lower_32_bits((u64)lut));
-+	cmd_resp->addr_high = cpu_to_le32(
-+		high_16_bits((u64)(unsigned long)lut));
-+	cmd_resp->addr_low = cpu_to_le32(
-+		lower_32_bits((u64)(unsigned long)lut));
- 
- 	status = i40evf_asq_send_command(hw, &desc, lut, lut_size, NULL);
- 
-@@ -519,8 +521,10 @@ static i40e_status i40e_aq_get_set_rss_key(struct i40e_hw *hw,
- 					  I40E_AQC_SET_RSS_KEY_VSI_ID_SHIFT) &
- 					  I40E_AQC_SET_RSS_KEY_VSI_ID_MASK));
- 	cmd_resp->vsi_id |= cpu_to_le16((u16)I40E_AQC_SET_RSS_KEY_VSI_VALID);
--	cmd_resp->addr_high = cpu_to_le32(high_16_bits((u64)key));
--	cmd_resp->addr_low = cpu_to_le32(lower_32_bits((u64)key));
-+	cmd_resp->addr_high = cpu_to_le32(
-+		high_16_bits((u64)(unsigned long)key));
-+	cmd_resp->addr_low = cpu_to_le32(
-+		lower_32_bits((u64)(unsigned long)key));
- 
- 	status = i40evf_asq_send_command(hw, &desc, key, key_size, NULL);
- 
--- 
-1.8.3.1
-
-From f11d529aa8ebd81218d8a0a2a8c04c4f41f3718f Mon Sep 17 00:00:00 2001
-From: Marcus Sundberg <marcus.sundberg@aptilo.com>
-Date: Mon, 8 Feb 2016 18:34:39 +0100
-Subject: [PATCH] iw_cxgb4: 32b platform fix
-
-Casting pci_resource_start() return value directly to void * causes
-a warning.
----
- drivers/infiniband/hw/cxgb4/device.c | 2 +-
+ include/linux/gpt.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/infiniband/hw/cxgb4/device.c b/drivers/infiniband/hw/cxgb4/device.c
-index 11d55c9..94c2391 100644
---- a/drivers/infiniband/hw/cxgb4/device.c
-+++ b/drivers/infiniband/hw/cxgb4/device.c
-@@ -830,7 +830,7 @@ static int c4iw_rdev_open(struct c4iw_rdev *rdev)
- 	PDBG("udb len 0x%x udb base %p db_reg %p gts_reg %p qpshift %lu "
- 	     "qpmask 0x%x cqshift %lu cqmask 0x%x\n",
- 	     (unsigned)pci_resource_len(rdev->lldi.pdev, 2),
--	     (void *)pci_resource_start(rdev->lldi.pdev, 2),
-+	     (void *)(unsigned long)pci_resource_start(rdev->lldi.pdev, 2),
- 	     rdev->lldi.db_reg,
- 	     rdev->lldi.gts_reg,
- 	     rdev->qpshift, rdev->qpmask,
--- 
-1.8.3.1
-
-From 39f3f2d7be077d4a067d95ea2b3f02e51f7a05f3 Mon Sep 17 00:00:00 2001
-From: Marcus Sundberg <marcus.sundberg@aptilo.com>
-Date: Mon, 8 Feb 2016 18:18:10 +0100
-Subject: [PATCH] nvme: fix pointer cast warnings on 32 bit
-
----
- drivers/block/nvme-core.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/block/nvme-core.c b/drivers/block/nvme-core.c
-index 711d96a..eafb721 100644
---- a/drivers/block/nvme-core.c
-+++ b/drivers/block/nvme-core.c
-@@ -1693,8 +1693,9 @@ static int nvme_submit_io(struct nvme_ns *ns, struct nvme_user_io __user *uio)
- 			goto unmap;
- 		}
- 		if (write) {
--			if (copy_from_user(meta, (void __user *)io.metadata,
--					   meta_len)) {
-+			if (copy_from_user(meta,
-+					(void __user *)(uintptr_t)io.metadata,
-+					meta_len)) {
- 				status = -EFAULT;
- 				goto unmap;
- 			}
-@@ -1722,8 +1723,8 @@ static int nvme_submit_io(struct nvme_ns *ns, struct nvme_user_io __user *uio)
- 
- 	if (meta) {
- 		if (status == NVME_SC_SUCCESS && !write) {
--			if (copy_to_user((void __user *)io.metadata, meta,
--					 meta_len))
-+			if (copy_to_user((void __user *)(uintptr_t)io.metadata,
-+					 meta, meta_len))
- 				status = -EFAULT;
- 		}
- 		dma_free_coherent(&dev->pci_dev->dev, meta_len, meta, meta_dma);
--- 
-1.8.3.1
-
-From d719f2b11f08861d97992f5973b7465fdb150a42 Mon Sep 17 00:00:00 2001
-From: Marcus Sundberg <marcus.sundberg@aptilo.com>
-Date: Mon, 8 Feb 2016 14:46:16 +0100
-Subject: [PATCH] (queue_store_unpriv_sgio): Check return from queue_var_store
-
----
- block/blk-sysfs.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 13c5338..1f168c0 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -207,6 +207,8 @@ queue_store_unpriv_sgio(struct request_queue *q, const char *page, size_t count)
- 		return -EPERM;
- 
- 	ret = queue_var_store(&val, page, count);
-+	if (ret < 0)
-+		return ret;
- 	spin_lock_irq(q->queue_lock);
- 	if (val)
- 		queue_flag_set(QUEUE_FLAG_UNPRIV_SGIO, q);
+diff --git a/include/linux/gpt.h b/include/linux/gpt.h
+index 134e02b..56715f1 100644
+--- a/include/linux/gpt.h
++++ b/include/linux/gpt.h
+@@ -45,7 +45,7 @@
+ struct gpt {
+ 	unsigned long		start;
+ 	unsigned long		end;
+-	unsigned long		*gdp;
++	gte_t			*gdp;
+ 	atomic_t		refcount;
+ 	spinlock_t		lock;
+ 	uint8_t			nlevels;
 -- 
 1.8.3.1
 

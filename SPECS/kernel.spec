@@ -719,7 +719,7 @@ ApplyOptionalPatch i386-audit-stop-scri-stack-frame.patch
 ApplyOptionalPatch addmissing.patch
 ApplyOptionalPatch morefixes.patch
 #ApplyOptionalPatch undorhirqstat.patch
-#ApplyOptionalPatch clear-32bit-Werror-warnings.patch
+ApplyOptionalPatch clear-32bit-Werror-warnings.patch
 #ApplyOptionalPatch upstream-32bit-fixes.patch
 %endif
 
