@@ -392,7 +392,6 @@ Patch999999: linux-kernel-test.patch
 Patch1000: debrand-single-cpu.patch
 Patch1001: debrand-rh_taint.patch
 Patch1002: debrand-rh-i686-cpu.patch
-Patch1003: ignorewarnings.patch
 Patch1004: removejiffies.patch
 Patch1005: cpufreq.patch
 Patch1006: i386-audit-stop-scri-stack-frame.patch
@@ -714,7 +713,6 @@ ApplyOptionalPatch debrand-rh_taint.patch
 ApplyOptionalPatch debrand-rh-i686-cpu.patch
 
 %ifarch %{ix86}
-ApplyOptionalPatch ignorewarnings.patch
 ApplyOptionalPatch removejiffies.patch
 ApplyOptionalPatch cpufreq.patch
 ApplyOptionalPatch i386-audit-stop-scri-stack-frame.patch
