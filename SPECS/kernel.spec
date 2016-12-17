@@ -720,7 +720,7 @@ ApplyOptionalPatch addmissing.patch
 ApplyOptionalPatch morefixes.patch
 #ApplyOptionalPatch undorhirqstat.patch
 ApplyOptionalPatch clear-32bit-Werror-warnings.patch
-#ApplyOptionalPatch upstream-32bit-fixes.patch
+ApplyOptionalPatch upstream-32bit-fixes.patch
 %endif
 
 # Any further pre-build tree manipulations happen here.
