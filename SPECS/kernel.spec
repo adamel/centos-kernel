@@ -404,6 +404,7 @@ Patch1008: undorhirqstat.patch
 Patch1009: clear-32bit-Werror-warnings.patch
 Patch1010: upstream-32bit-fixes.patch
 Patch1011: morefixes.patch
+Patch1012: x86-perf-uncore-Avoid-kernel-panic-on-missing-topolo.patch
 
 # centosplus patches
 Patch30010: centos-linux-3.10-hid-non-LogiTech-remote-bug5780.patch
@@ -765,6 +766,7 @@ ApplyOptionalPatch morefixes.patch
 #ApplyOptionalPatch otherfixes.patch
 ApplyOptionalPatch clear-32bit-Werror-warnings.patch
 ApplyOptionalPatch upstream-32bit-fixes.patch
+ApplyOptionalPatch x86-perf-uncore-Avoid-kernel-panic-on-missing-topolo.patch
 %endif
 
 ### plus mod

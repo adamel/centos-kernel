@@ -1,0 +1,42 @@
+From ac68351410df683a149e7eea09df178884cf2419 Mon Sep 17 00:00:00 2001
+From: Marcus Sundberg <marcus.sundberg@aptilo.com>
+Date: Mon, 13 Feb 2017 22:57:11 +0100
+Subject: [PATCH] [x86] perf: uncore: Avoid kernel panic on missing topology
+
+The uncore code is heavily dependent on the CPU topology mapping code,
+so if we do not even have a working topology for the boot CPU we just
+give up.
+This happens for example on HPE DL360 Gen9 servers with x2APIC enabled
+in the firmware settings, where the kernel only finds a single core.
+---
+ arch/x86/events/intel/uncore.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/arch/x86/events/intel/uncore.c b/arch/x86/events/intel/uncore.c
+index 77ec6c0..88d79f6 100644
+--- a/arch/x86/events/intel/uncore.c
++++ b/arch/x86/events/intel/uncore.c
+@@ -1394,6 +1394,20 @@ static int __init intel_uncore_init(void)
+ 	if (is_kdump_kernel())
+ 		return -ENODEV;
+ 
++	/* Sanity check - do not even try to proceed if we have no
++	   working topology mapping for the boot CPU. */
++	if (rh_boot_cpu_data.logical_proc_id < 0 ||
++	    topology_phys_to_logical_pkg(boot_cpu_data.phys_proc_id) < 0) {
++		printk(KERN_ERR
++		       "no mapping between physical and logical CPU, "
++		       "boot CPU phys: %d, logical: %d/%d\n",
++		       (int)boot_cpu_data.phys_proc_id,
++		       (int)rh_boot_cpu_data.logical_proc_id,
++		       (int)topology_phys_to_logical_pkg(
++			       boot_cpu_data.phys_proc_id));
++		return -ENODEV;
++	}
++
+ 	max_packages = topology_max_packages();
+ 
+ 	pret = uncore_pci_init();
+-- 
+2.5.0
+
