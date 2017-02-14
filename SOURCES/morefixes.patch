@@ -1,0 +1,84 @@
+diff -up linux-3.10.0-514.sdl7.i686/arch/x86/include/asm/cpufeature.h.morefixes linux-3.10.0-514.sdl7.i686/arch/x86/include/asm/cpufeature.h
+--- linux-3.10.0-514.sdl7.i686/arch/x86/include/asm/cpufeature.h.morefixes	2016-10-19 10:16:25.000000000 -0400
++++ linux-3.10.0-514.sdl7.i686/arch/x86/include/asm/cpufeature.h	2016-11-05 08:30:46.276033474 -0400
+@@ -354,6 +354,7 @@ extern const char * const x86_power_flag
+ #define cpu_has_avx		boot_cpu_has(X86_FEATURE_AVX)
+ #define cpu_has_avx2		boot_cpu_has(X86_FEATURE_AVX2)
+ #define cpu_has_ht		boot_cpu_has(X86_FEATURE_HT)
++#define cpu_has_mp		boot_cpu_has(X86_FEATURE_MP)
+ #define cpu_has_nx		boot_cpu_has(X86_FEATURE_NX)
+ #define cpu_has_xstore		boot_cpu_has(X86_FEATURE_XSTORE)
+ #define cpu_has_xstore_enabled	boot_cpu_has(X86_FEATURE_XSTORE_EN)
+diff -up linux-3.10.0-514.sdl7.i686/arch/x86/include/asm/irq_remapping.h.morefixes linux-3.10.0-514.sdl7.i686/arch/x86/include/asm/irq_remapping.h
+--- linux-3.10.0-514.sdl7.i686/arch/x86/include/asm/irq_remapping.h.morefixes	2016-10-19 10:16:25.000000000 -0400
++++ linux-3.10.0-514.sdl7.i686/arch/x86/include/asm/irq_remapping.h	2016-11-05 09:39:38.425043476 -0400
+@@ -110,7 +110,7 @@ static inline bool setup_remapped_irq(in
+ 	return false;
+ }
+ 
+-int irq_set_vcpu_affinity(unsigned int irq, void *vcpu_info)
++static inline int irq_set_vcpu_affinity(unsigned int irq, void *vcpu_info)
+ {
+ 	return -ENOSYS;
+ }
+diff -up linux-3.10.0-514.sdl7.i686/arch/x86/kernel/irq_32.c.morefixes linux-3.10.0-514.sdl7.i686/arch/x86/kernel/irq_32.c
+--- linux-3.10.0-514.sdl7.i686/arch/x86/kernel/irq_32.c.morefixes	2016-10-19 10:16:25.000000000 -0400
++++ linux-3.10.0-514.sdl7.i686/arch/x86/kernel/irq_32.c	2016-11-05 09:49:59.371055125 -0400
+@@ -24,9 +24,12 @@
+ DEFINE_PER_CPU_SHARED_ALIGNED(irq_cpustat_t, irq_stat);
+ EXPORT_PER_CPU_SYMBOL(irq_stat);
+ 
++DEFINE_PER_CPU_SHARED_ALIGNED(rh_irq_cpustat_t, rh_irq_stat);
++
+ DEFINE_PER_CPU(struct pt_regs *, irq_regs);
+ EXPORT_PER_CPU_SYMBOL(irq_regs);
+ 
++
+ #ifdef CONFIG_DEBUG_STACKOVERFLOW
+ 
+ int sysctl_panic_on_stackoverflow __read_mostly;
+diff -up linux-3.10.0-514.sdl7.i686/include/linux/pps_kernel.h.morefixes linux-3.10.0-514.sdl7.i686/include/linux/pps_kernel.h
+--- linux-3.10.0-514.sdl7.i686/include/linux/pps_kernel.h.morefixes	2016-10-19 10:16:25.000000000 -0400
++++ linux-3.10.0-514.sdl7.i686/include/linux/pps_kernel.h	2016-11-05 10:44:41.492049162 -0400
+@@ -115,10 +115,17 @@ static inline void pps_get_ts(struct pps
+ {
+ 	struct system_time_snapshot snap;
+ 	ktime_get_snapshot(&snap);
++#if defined CONFIG_X86_64
+ 	ts->ts_real = ktime_to_timespec64(snap.real);
+ #ifdef CONFIG_NTP_PPS
+ 	ts->ts_raw = ktime_to_timespec64(snap.raw);
+ #endif
++#else
++	ts->ts_real = ktime_to_timespec(snap.real);
++#ifdef CONFIG_NTP_PPS
++	ts->ts_raw = ktime_to_timespec(snap.raw);
++#endif
++#endif
+ }
+ 
+ /* Subtract known time delay from PPS event time(s) */
+diff -up linux-3.10.0-514.sdl7.i686/kernel/hrtimer.c.morefixes linux-3.10.0-514.sdl7.i686/kernel/hrtimer.c
+--- linux-3.10.0-514.sdl7.i686/kernel/hrtimer.c.morefixes	2016-10-19 10:16:25.000000000 -0400
++++ linux-3.10.0-514.sdl7.i686/kernel/hrtimer.c	2016-11-05 10:58:56.726065206 -0400
+@@ -328,6 +328,7 @@ u64 ktime_divns(const ktime_t kt, s64 di
+ 
+ 	return dclc;
+ }
++EXPORT_SYMBOL_GPL(ktime_divns);
+ #endif /* BITS_PER_LONG >= 64 */
+ 
+ /*
+diff -up linux-3.10.0-514.sdl7.i686/mm/swap.c.morefixes linux-3.10.0-514.sdl7.i686/mm/swap.c
+--- linux-3.10.0-514.sdl7.i686/mm/swap.c.morefixes	2016-10-19 10:16:25.000000000 -0400
++++ linux-3.10.0-514.sdl7.i686/mm/swap.c	2016-11-05 08:55:41.521061525 -0400
+@@ -972,9 +972,6 @@ void release_pages(struct page **pages,
+ 		if (!put_page_testzero(page))
+ 			continue;
+ 
+-		VM_BUG_ON_PAGE(check_mmu_gather &&
+-			       trans_huge_mmu_gather_count(page), page);
+-
+ 		if (PageLRU(page)) {
+ 			if (!was_thp)
+ 				zone = zone_lru_lock(zone, page, &lock_batch,

@@ -1,0 +1,25 @@
+centosplus kernel patch (bug#8285)
+
+Reported by armada:
+DVB-T Receiver "Terratec Cinergy Hybrid T USB XS" not working
+
+My problem is exactly the same as described in
+http://linuxtv.org/pipermail/linux-dvb/2014-May/032967.html [^]
+This post also has a patch which solved the problem for me.
+
+The em28xx driver causes the :
+em2882/3 #0: /2: dvb frontend not attached. Can't attach xc3028
+
+Changing the USB_DEVICE(0x0ccd, 0x0042) from driver_info = EM2882_BOARD_TERRATEC_HYBRID_XS to EM2880_BOARD_TERRATEC_HYBRID_XS solved the problem.
+
+--- a/drivers/media/usb/em28xx/em28xx-cards.c	2015-01-29 15:15:53.000000000 -0800
++++ b/drivers/media/usb/em28xx/em28xx-cards.c	2015-03-07 08:50:38.737699310 -0800
+@@ -2091,7 +2091,7 @@ struct usb_device_id em28xx_id_table[] =
+ 	{ USB_DEVICE(0x0ccd, 0x005e),
+ 			.driver_info = EM2882_BOARD_TERRATEC_HYBRID_XS },
+ 	{ USB_DEVICE(0x0ccd, 0x0042),
+-			.driver_info = EM2882_BOARD_TERRATEC_HYBRID_XS },
++			.driver_info = EM2880_BOARD_TERRATEC_HYBRID_XS },
+ 	{ USB_DEVICE(0x0ccd, 0x0043),
+ 			.driver_info = EM2870_BOARD_TERRATEC_XS },
+ 	{ USB_DEVICE(0x0ccd, 0x008e),	/* Cinergy HTC USB XS Rev. 1 */

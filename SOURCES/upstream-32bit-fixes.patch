@@ -1,0 +1,224 @@
+From 5265f6ea5a6643c5b2aa13e8e4664962251b37ea Mon Sep 17 00:00:00 2001
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Date: Thu, 13 Mar 2014 14:16:40 -0400
+Subject: [PATCH] qla2xxx: Fix build errors related to invalid print fields on
+ some architectures.
+
+Fixes some build warnings such as:
+drivers/scsi/qla2xxx/qla_attr.c:162:6: warning: format '%lx' expects argument of
+type 'long unsigned int', but argument 6 has type 'size_t'"
+and
+drivers/scsi/qla2xxx/qla_init.c:5198:7: warning: format '%lx' expects argument
+of type 'long unsigned int', but argument 5 has type 'uint32_t' [-Wformat]
+
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c |  6 +++---
+ drivers/scsi/qla2xxx/qla_init.c | 12 ++++++------
+ 2 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index da5ae11..1a976c0 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -159,7 +159,7 @@ qla2x00_sysfs_read_fw_dump_template(struct file *filp, struct kobject *kobj,
+ 		return 0;
+ 
+ 	ql_dbg(ql_dbg_user, vha, 0x70e2,
+-	    "chunk <- off=%llx count=%lx\n", off, count);
++	    "chunk <- off=%llx count=%zx\n", off, count);
+ 	return memory_read_from_buffer(buf, count, &off,
+ 	    ha->fw_dump_template, ha->fw_dump_template_len);
+ }
+@@ -200,11 +200,11 @@ qla2x00_sysfs_write_fw_dump_template(struct file *filp, struct kobject *kobj,
+ 	if (off + count > ha->fw_dump_template_len) {
+ 		count = ha->fw_dump_template_len - off;
+ 		ql_dbg(ql_dbg_user, vha, 0x70d3,
+-		    "chunk -> truncating to %lx bytes.\n", count);
++		    "chunk -> truncating to %zx bytes.\n", count);
+ 	}
+ 
+ 	ql_dbg(ql_dbg_user, vha, 0x70d4,
+-	    "chunk -> off=%llx count=%lx\n", off, count);
++	    "chunk -> off=%llx count=%zx\n", off, count);
+ 	memcpy(ha->fw_dump_template + off, buf, count);
+ 
+ 	if (off + count == ha->fw_dump_template_len) {
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index c64ee86..462836c 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5452,8 +5452,8 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
+ 	    "-> template size %x bytes\n", dlen);
+ 	if (dlen > risc_size * sizeof(*dcode)) {
+ 		ql_log(ql_log_warn, vha, 0x0167,
+-		    "Failed fwdump template exceeds array by %lx bytes\n",
+-		    dlen - risc_size * sizeof(*dcode));
++		    "Failed fwdump template exceeds array by %x bytes\n",
++		    (uint32_t)(dlen - risc_size * sizeof(*dcode)));
+ 		goto default_template;
+ 	}
+ 	ha->fw_dump_template_len = dlen;
+@@ -5719,8 +5719,8 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 	ha->fw_dump_template_len = 0;
+ 
+ 	ql_dbg(ql_dbg_init, vha, 0x171,
+-	    "Loading fwdump template from %lx\n",
+-	    (void *)fwcode - (void *)blob->fw->data);
++	    "Loading fwdump template from %x\n",
++	    (uint32_t)((void *)fwcode - (void *)blob->fw->data));
+ 	risc_size = be32_to_cpu(fwcode[2]);
+ 	ql_dbg(ql_dbg_init, vha, 0x172,
+ 	    "-> array size %x dwords\n", risc_size);
+@@ -5754,8 +5754,8 @@ qla24xx_load_risc_blob(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 	    "-> template size %x bytes\n", dlen);
+ 	if (dlen > risc_size * sizeof(*fwcode)) {
+ 		ql_log(ql_log_warn, vha, 0x0177,
+-		    "Failed fwdump template exceeds array by %lx bytes\n",
+-		    dlen - risc_size * sizeof(*fwcode));
++		    "Failed fwdump template exceeds array by %x bytes\n",
++		    (uint32_t)(dlen - risc_size * sizeof(*fwcode)));
+ 		goto default_template;
+ 	}
+ 	ha->fw_dump_template_len = dlen;
+-- 
+1.8.3.1
+
+From b9469523631bd376a5f877d4e816f3a81c12b790 Mon Sep 17 00:00:00 2001
+From: Paul Bolle <pebolle@tiscali.nl>
+Date: Mon, 30 Jun 2014 16:32:29 +0200
+Subject: [PATCH] x86: Remove unused variable "polling"
+
+Compile tested. "polling" is unused since commit f80c5b39b80a
+("sched/idle, x86: Switch from TS_POLLING to TIF_POLLING_NRFLAG").
+
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Peter Zijlstra <peterz@infradead.org>
+Cc: Jiri Kosina <jkosina@suse.cz>
+Link: http://lkml.kernel.org/r/1404138749.2978.6.camel@x41
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/kernel/apm_32.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/arch/x86/kernel/apm_32.c b/arch/x86/kernel/apm_32.c
+index 8fdcec6..66d3b1f 100644
+--- a/arch/x86/kernel/apm_32.c
++++ b/arch/x86/kernel/apm_32.c
+@@ -841,7 +841,6 @@ static int apm_do_idle(void)
+ 	u32 eax;
+ 	u8 ret = 0;
+ 	int idled = 0;
+-	int polling;
+ 	int err = 0;
+ 
+ 	if (!need_resched()) {
+-- 
+1.8.3.1
+
+From 75c2e0e53d2fb5df66b8fe162d71930348ac0b96 Mon Sep 17 00:00:00 2001
+From: John Stultz <john.stultz@linaro.org>
+Date: Wed, 16 Jul 2014 21:03:56 +0000
+Subject: [PATCH] ktime: Change ktime_set() to take 64bit seconds value
+
+In order to support dates past 2038 on 32bit systems, ktime_set()
+needs to handle 64bit second values.
+
+[ tglx: Removed the BITS_PER_LONG check ]
+
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+---
+ include/linux/ktime.h | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/ktime.h b/include/linux/ktime.h
+index e4e9a9f..6950c96 100644
+--- a/include/linux/ktime.h
++++ b/include/linux/ktime.h
+@@ -71,13 +71,12 @@ typedef union ktime ktime_t;		/* Kill this */
+  *
+  * Return the ktime_t representation of the value
+  */
+-static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
++static inline ktime_t ktime_set(const s64 secs, const unsigned long nsecs)
+ {
+-#if (BITS_PER_LONG == 64)
+ 	if (unlikely(secs >= KTIME_SEC_MAX))
+ 		return (ktime_t){ .tv64 = KTIME_MAX };
+-#endif
+-	return (ktime_t) { .tv64 = (s64)secs * NSEC_PER_SEC + (s64)nsecs };
++
++	return (ktime_t) { .tv64 = secs * NSEC_PER_SEC + (s64)nsecs };
+ }
+ 
+ /* Subtract two ktime_t variables. rem = lhs -rhs: */
+-- 
+1.8.3.1
+
+From 80a667f7ab1beee42b31e263ba4681fdfe00a0b6 Mon Sep 17 00:00:00 2001
+From: Florian Westphal <fw@strlen.de>
+Date: Wed, 17 Jun 2015 23:58:28 +0200
+Subject: [PATCH] netfilter: xtables: fix warnings on 32bit platforms
+
+On 32bit archs gcc complains due to cast from void* to u64.
+Add intermediate casts to long to silence these warnings.
+
+include/linux/netfilter/x_tables.h:376:10: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+include/linux/netfilter/x_tables.h:384:15: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+include/linux/netfilter/x_tables.h:391:23: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+include/linux/netfilter/x_tables.h:400:22: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+
+Fixes: 71ae0dff02d756e ("netfilter: xtables: use percpu rule counters")
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+---
+ include/linux/netfilter/x_tables.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/linux/netfilter/x_tables.h b/include/linux/netfilter/x_tables.h
+index d08f0ed..781b6fe 100644
+--- a/include/linux/netfilter/x_tables.h
++++ b/include/linux/netfilter/x_tables.h
+@@ -390,7 +390,7 @@ static inline u64 xt_percpu_counter_alloc(void)
+ 		if (res == NULL)
+ 			return (u64) -ENOMEM;
+ 
+-		return (__force u64) res;
++		return (u64) (__force unsigned long) res;
+ 	}
+ 
+ 	return 0;
+@@ -398,14 +398,14 @@ static inline u64 xt_percpu_counter_alloc(void)
+ static inline void xt_percpu_counter_free(u64 pcnt)
+ {
+ 	if (nr_cpu_ids > 1)
+-		free_percpu((void __percpu *) pcnt);
++		free_percpu((void __percpu *) (unsigned long) pcnt);
+ }
+ 
+ static inline struct xt_counters *
+ xt_get_this_cpu_counter(struct xt_counters *cnt)
+ {
+ 	if (nr_cpu_ids > 1)
+-		return this_cpu_ptr((void __percpu *) cnt->pcnt);
++		return this_cpu_ptr((void __percpu *) (unsigned long) cnt->pcnt);
+ 
+ 	return cnt;
+ }
+@@ -414,7 +414,7 @@ static inline struct xt_counters *
+ xt_get_per_cpu_counter(struct xt_counters *cnt, unsigned int cpu)
+ {
+ 	if (nr_cpu_ids > 1)
+-		return per_cpu_ptr((void __percpu *) cnt->pcnt, cpu);
++		return per_cpu_ptr((void __percpu *) (unsigned long) cnt->pcnt, cpu);
+ 
+ 	return cnt;
+ }
+-- 
+1.8.3.1
+

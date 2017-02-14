@@ -1,0 +1,27 @@
+From 87a5a3683110ec3d30d95036c57f5cfa330ca9d9 Mon Sep 17 00:00:00 2001
+From: Marcus Sundberg <marcus.sundberg@aptilo.com>
+Date: Fri, 16 Dec 2016 22:53:51 +0100
+Subject: [PATCH] gpt: Use correct type for gpt->gdp.
+
+It should be a pointer to gte_t, to avoid warnings when
+CONFIG_HIGHMEM64G is enabled.
+---
+ include/linux/gpt.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/gpt.h b/include/linux/gpt.h
+index 134e02b..56715f1 100644
+--- a/include/linux/gpt.h
++++ b/include/linux/gpt.h
+@@ -45,7 +45,7 @@
+ struct gpt {
+ 	unsigned long		start;
+ 	unsigned long		end;
+-	unsigned long		*gdp;
++	gte_t			*gdp;
+ 	atomic_t		refcount;
+ 	spinlock_t		lock;
+ 	uint8_t			nlevels;
+-- 
+1.8.3.1
+

@@ -1,0 +1,45 @@
+CentOS-7 patch: Allow non-LogiTech remote to work with a generic wireless
+keyboard reciever that sends LogiTech scancodes.
+
+CentOSplus bug: 0005780
+Submitted by: Alex Timm <alextimm@msn.com>
+
+LIRCD and devinput driver connected to the HOLTEK USB Keyboard remote reciever,
+connected on /dev/input/eventx, was not reading the scancodes that should be
+found in drivers/hid/lg.c.  The following patch adds the scan codes to
+hid-input.c as they were in centos/centosplus 5.
+
+Applied by: Akemi Yagi <toracat@centos.org>
+
+--- a/drivers/hid/hid-input.c   2009-12-02 21:51:21.000000000 -0600
++++ b/drivers/hid/hid-input.c   2012-06-20 15:20:04.000000000 -0500
+@@ -886,7 +886,28 @@ static void hidinput_configure_usage(str
+ 		goto ignore;
+ 
+ 	case HID_UP_LOGIVENDOR:
+-		goto ignore;
++		set_bit(EV_REP, input->evbit);
++		switch(usage->hid & HID_USAGE) {
++		case 0x004: map_key_clear(KEY_AGAIN);           break;
++		case 0x00d: map_key_clear(KEY_HOME);            break;
++		case 0x024: map_key_clear(KEY_SHUFFLE);         break;
++		case 0x025: map_key_clear(KEY_TV);              break;
++		case 0x026: map_key_clear(KEY_MENU);            break;
++		case 0x031: map_key_clear(KEY_AUDIO);           break;
++		case 0x032: map_key_clear(KEY_TEXT);            break;
++		case 0x033: map_key_clear(KEY_LAST);            break;
++		case 0x047: map_key_clear(KEY_MP3);             break;
++		case 0x048: map_key_clear(KEY_DVD);             break;
++		case 0x049: map_key_clear(KEY_MEDIA);           break;
++		case 0x04a: map_key_clear(KEY_VIDEO);           break;
++		case 0x04b: map_key_clear(KEY_ANGLE);           break;
++		case 0x04c: map_key_clear(KEY_LANGUAGE);        break;
++		case 0x04d: map_key_clear(KEY_SUBTITLE);        break;
++		case 0x051: map_key_clear(KEY_RED);             break;
++		case 0x052: map_key_clear(KEY_CLOSE);           break;
++		default:    goto ignore;
++		}
++		break;
+ 
+ 	case HID_UP_PID:
+ 		switch (usage->hid & HID_USAGE) {
